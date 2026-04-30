@@ -83,18 +83,18 @@ The whole accent palette derives from one hue. Drop this in a snippet:
 }
 ```
 
-Try other hues:
+![Liquid hue palette](screenshots/hue-palette.png)
+
+Each card above is the same theme, same code, same glass material — only `--bb-accent-h` changes. Pick any value 0–360 and every accent regenerates: file-active rings, focus indicators, tab stripes, callouts, tags, syntax keywords, button fills, hover hints, glass-edge tints. One line, full retheme.
 
 | Vibe | Hue |
 |---|---|
 | Forest green (default) | `146` |
+| Amber | `25` |
 | Cobalt blue | `220` |
 | Plum | `280` |
-| Amber | `25` |
 | Rose | `345` |
 | Teal | `175` |
-
-Change the hue and every token regenerates: file-active rings, focus indicators, tab stripes, callouts, tags, syntax keywords, button fills, hover hints. One line, full retheme.
 
 ### Tune the glass material
 
