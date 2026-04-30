@@ -1,0 +1,2509 @@
+@import url('https://rsms.me/inter/inter.css');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ============================================================================
+ *  Liquid — a Liquid Glass theme for Obsidian
+ *  v1.0.0 — 2026-04-29 (PUBLIC RELEASE — 37 internal polish iterations on a
+ *  single personal vault, refactored to standalone theme. macOS Tahoe Liquid
+ *  Glass aesthetic across all chrome. See README.md / DESIGN.md / PRODUCT.md.)
+ *
+ *  ────────────────────────────────────────────────────────────────────────
+ *  Internal iteration log (kept for reference, not a public changelog):
+ *
+ *  v1.1.35 — 2026-04-29 (Liquid +polish #35: tabs simplified — removed the
+ *            "weird light" (catchlight + side hairlines that were creating
+ *            edge artifacts on hover). Softened the squared bottom by
+ *            switching from top-only-rounded to all-corners-rounded at
+ *            radius-s (6px). Hover = tint + 1px accent foot. Active = tint
+ *            + soft blur + 2px accent foot. Pure, no extra visual noise.)
+ *
+ *  v1.1.36 — 2026-04-29 (audit P3 cleanup: rolled up token drift. New tokens
+ *            in :root — accent-fill-soft/mid/strong (10/16/22%),
+ *            accent-ring-soft/mid/strong (18/22/45%), accent-foot (30%),
+ *            focus-ring (55%), tag-fill/ring/fill-hover (14/18/20%),
+ *            shadow-thumb/soft/ring (30/18/10% black-tint), scrim (40%).
+ *            Replaced literal hsla in tabs, file-explorer active row, chrome
+ *            icons, suggestion items, callouts, tags, frontmatter pills,
+ *            search focus, focus rings, modal scrim, toggle thumb shadows.
+ *            One source of truth per intensity.)
+ *
+ *  v1.1.37 — 2026-04-29 (next-actions sweep — colorize + clarify + harden:
+ *            (1) syntax highlighting palette for Prism + CodeMirror —
+ *                forest-friendly: comment muted gray, keyword coral,
+ *                string sage, number amber, function cyan, class purple,
+ *                tag coral, attr gold, punctuation muted;
+ *            (2) --text-highlight-bg set to warm amber (40% dark / 30% light);
+ *            (3) light-mode glass tuned — tint opacity 0.62→0.78, highlight
+ *                0.55→0.30, shadow opacities bumped for elevation;
+ *            (4) hover popovers (wikilink preview) now glass cards;
+ *            (5) drag indicator + drop targets get accent glass treatment;
+ *            (6) empty states styled (faint, italic, centered);
+ *            (7) ellipsis truncation policy on tree items / tab titles /
+ *                frontmatter values;
+ *            (8) CodeMirror selection forced to --text-selection;
+ *            (9) Inter + JetBrains Mono @import for guaranteed typography.)
+ *
+ *  For full effect, enable: Settings → Appearance → Translucent window.
+ *  Without translucent window, glass renders as semi-opaque floating cards
+ *  over the editor canvas (still good, just not blurred over wallpaper).
+ *
+ *  Design principles:
+ *    1. Forest green accent (hue 146°) — refined saturation, no highlighter feel
+ *    2. Tight-but-breathable density (28-30px row height in file tree)
+ *    3. Single source of truth for spacing + glass (CSS variables)
+ *    4. macOS-respectful — don't paint over traffic lights, lean into vibrancy
+ *    5. Honest hierarchy: active > hover > default; quiet by default
+ *    6. Glass IS the system (Tahoe variant) — backdrop blur + saturate as the
+ *       canonical chrome material. NOT decoration; applied uniformly to every
+ *       floating panel. (Other AI tells still banned: no gradient text,
+ *       no card grids, no big-number metrics, no side-stripes >1px.)
+ *    7. Real motion: 120-200ms ease-out (no overshoot, no elastic)
+ *    8. Absolute-positioned chevrons (Ono-Sendai pattern) so files+folders
+ *       share the same padding without per-row-type overrides
+ *    9. Tinted neutrals only — never pure #fff or #000
+ *    10. WCAG AA contrast on all interactive accents (≥4.5:1 with white text)
+ *    11. Generous corner radii (continuous corners feel) — 14-18px on panels,
+ *        10-12px on cards, 6-8px on buttons. Tahoe geometry.
+ *    12. Inner top-edge highlight + outer drop shadow on every floating panel —
+ *        the catchlight + elevation pair that makes glass read as a layer.
+ *
+ *  Folder structure:
+ *    1. CSS variables (light + dark + glass tokens)
+ *    2. Base typography
+ *    3. Title bar + window chrome
+ *    4. Tab bar (floating glass)
+ *    5. Sidebar / ribbon icons (translucent strip)
+ *    6. File explorer (Ono-Sendai pattern)
+ *    7. Sidebar panels (glass cards: search, bookmarks, graph filter sections)
+ *    8. Toggles (Liquid pill)
+ *    9. Buttons (Liquid CTA + glass secondary)
+ *    10. Markdown content (headings, code, tables, blockquotes, callouts — glass)
+ *    11. Frontmatter properties (glass card)
+ *    12. Tags + tasks (Liquid pills)
+ *    13. Selection + caret
+ *    14. Status bar + vault switcher (translucent)
+ *    15. Modals + popovers + tooltips (strong glass + vibrancy)
+ *    16. Graph view (color groups)
+ *    17. Polish surfaces (a-h):
+ *        a. Scrollbars (thin, macOS-style)
+ *        b. Resize handles (invisible until hover)
+ *        c. Notice toasts (glass capsule)
+ *        d. Vault switcher (Liquid capsule)
+ *        e. Tables (glass header + refined dividers)
+ *        f. Internal embeds / transclusions (glass card)
+ *        g. bimbiOS property values (Liquid pill)
+ *        h. List markers
+ *    18. Sidebars + .is-translucent enhancements
+ *    19. Print
+ *    20. Reduced motion + reduced transparency
+ * ============================================================================ */
+
+/* ============================================================================
+ * 1. CSS variables
+ * ============================================================================ */
+
+:root {
+  /* Spacing tokens — Tahoe geometry: continuous-feeling corners */
+  --bb-radius-xs: 4px;
+  --bb-radius-s:  6px;
+  --bb-radius-m:  10px;
+  --bb-radius-l:  16px;
+  --bb-radius-xl: 22px;
+
+  /* Forest green accent — hue 146° */
+  --bb-accent-h: 146;
+
+  /* Density */
+  --bb-row-padding-y: 5px;
+  --bb-row-padding-x: 10px;
+  --bb-row-padding-l-with-chevron: 18px;
+
+  /* Motion */
+  --bb-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --bb-duration-fast: 120ms;
+  --bb-duration-base: 180ms;
+  --bb-duration-slow: 260ms;
+
+  /* Glass — Tahoe Liquid material.
+   * Strength sized for the surface: light blur on inline pills, strong on modals. */
+  --bb-glass-blur-soft:   12px;
+  --bb-glass-blur-base:   24px;
+  --bb-glass-blur-strong: 40px;
+  --bb-glass-saturate:    180%;
+
+  /* Active-state accent intensities — single source of truth for pills,
+   * focus rings, file-active rows, callout fills, etc. */
+  --bb-accent-fill-soft:    hsla(var(--bb-accent-h), 55%, 50%, 0.10); /* hover hint */
+  --bb-accent-fill-mid:     hsla(var(--bb-accent-h), 55%, 50%, 0.16); /* active pill bg */
+  --bb-accent-fill-strong:  hsla(var(--bb-accent-h), 55%, 50%, 0.22); /* active hover bg */
+  --bb-accent-ring-soft:    hsla(var(--bb-accent-h), 55%, 50%, 0.18); /* subtle accent ring */
+  --bb-accent-ring-mid:     hsla(var(--bb-accent-h), 55%, 50%, 0.22); /* active pill ring */
+  --bb-accent-ring-strong:  hsla(var(--bb-accent-h), 55%, 50%, 0.45); /* focus ring */
+  --bb-accent-foot:         hsla(var(--bb-accent-h), 50%, 50%, 0.30); /* tab hover foot */
+  --bb-focus-ring:          hsla(var(--bb-accent-h), 55%, 50%, 0.55); /* keyboard focus */
+  --bb-tag-fill:            hsla(var(--bb-accent-h), 55%, 50%, 0.14);
+  --bb-tag-ring:            hsla(var(--bb-accent-h), 55%, 50%, 0.18);
+  --bb-tag-fill-hover:      hsla(var(--bb-accent-h), 55%, 50%, 0.20);
+
+  /* Shadow primitives — single source of truth for thumb / button drop shadows */
+  --bb-shadow-thumb:        hsla(220, 15%, 5%, 0.30);
+  --bb-shadow-thumb-soft:   hsla(220, 15%, 5%, 0.18);
+  --bb-shadow-thumb-ring:   hsla(220, 15%, 5%, 0.10);
+  --bb-scrim:               hsla(220, 15%, 5%, 0.40); /* modal backdrop tint */
+}
+
+/* ── Light mode ───────────────────────────────────────────── */
+
+.theme-light {
+  /* Backgrounds — slight warm tint, never pure white */
+  --background-primary:           hsl(40, 25%, 99%);
+  --background-primary-alt:       hsl(40, 20%, 96%);
+  --background-secondary:         hsl(40, 18%, 96%);
+  --background-secondary-alt:     hsl(40, 14%, 92%);
+
+  /* Borders — neutral, never accent */
+  --background-modifier-border:        hsla(0, 0%, 0%, 0.10);
+  --background-modifier-border-hover:  hsla(0, 0%, 0%, 0.16);
+  --background-modifier-border-focus:  hsla(var(--bb-accent-h), 50%, 40%, 0.40); /* soft, not vivid */
+  --background-modifier-hover:         hsla(0, 0%, 0%, 0.05);
+  --background-modifier-active-hover:  hsla(var(--bb-accent-h), 50%, 38%, 0.10);
+
+  /* Text */
+  --text-normal:       hsl(220, 15%, 18%);
+  --text-muted:        hsl(220, 10%, 45%);
+  --text-faint:        hsl(220, 8%, 60%);
+  --text-on-accent:    hsl(146, 30%, 98%); /* tinted near-white, not pure #fff */
+
+  /* Accent palette — refined, NOT vivid */
+  --color-accent:           hsl(var(--bb-accent-h), 55%, 38%);
+  --color-accent-hsl:       var(--bb-accent-h), 55%, 38%;
+  --interactive-accent:     hsl(var(--bb-accent-h), 55%, 38%);
+  --interactive-accent-hover: hsl(var(--bb-accent-h), 60%, 32%);
+  --text-accent:            hsl(var(--bb-accent-h), 60%, 32%);
+  --text-accent-hover:      hsl(var(--bb-accent-h), 65%, 26%);
+
+  /* Accent washes */
+  --bb-accent-soft: hsla(var(--bb-accent-h), 55%, 38%, 0.08);
+  --bb-accent-mid:  hsla(var(--bb-accent-h), 55%, 38%, 0.18);
+  --bb-accent-base: hsl(var(--bb-accent-h), 55%, 38%);
+  --bb-accent-tint: hsl(var(--bb-accent-h), 50%, 50%);
+
+  /* Code */
+  --code-background:  hsl(40, 18%, 95%);
+  --code-normal:      hsl(220, 15%, 18%);
+
+  /* Caret + selection */
+  --caret-color:      var(--bb-accent-base);
+  --text-selection:   hsla(var(--bb-accent-h), 55%, 50%, 0.30);
+
+  /* Highlight — warm amber, soft */
+  --text-highlight-bg: hsla(40, 75%, 60%, 0.40);
+
+  /* Glass — light material (tuned 2026-04-29 audit: bumped tint opacity
+   * 0.62 → 0.78, dropped highlight 0.55 → 0.30 to avoid over-blanching) */
+  --bb-glass-tint:        hsla(40, 30%, 99%, 0.78);
+  --bb-glass-tint-strong: hsla(40, 30%, 99%, 0.90);
+  --bb-glass-tint-soft:   hsla(40, 25%, 98%, 0.62);
+  --bb-glass-highlight:   hsla(0, 0%, 100%, 0.30);
+  --bb-glass-edge:        hsla(0, 0%, 0%, 0.08);
+  --bb-glass-shadow:      0 1px 2px hsla(220, 15%, 20%, 0.08),
+                          0 8px 24px hsla(220, 15%, 20%, 0.12),
+                          0 24px 48px hsla(220, 15%, 20%, 0.10);
+  --bb-glass-shadow-lift: 0 2px 4px hsla(220, 15%, 20%, 0.12),
+                          0 16px 40px hsla(220, 15%, 20%, 0.18),
+                          0 40px 80px hsla(220, 15%, 20%, 0.14);
+
+  /* Syntax highlighting palette (light mode) — forest-green-friendly,
+   * tinted neutrals + warm accents for visual differentiation */
+  --bb-syntax-comment:    hsl(220, 8%, 50%);
+  --bb-syntax-keyword:    hsl(15, 70%, 40%);    /* warm coral — keyword/builtin/operator */
+  --bb-syntax-string:     hsl(146, 60%, 30%);   /* sage — strings/regex/attr-value */
+  --bb-syntax-number:     hsl(35, 75%, 35%);    /* amber — numbers/booleans */
+  --bb-syntax-function:   hsl(190, 55%, 35%);   /* cyan — functions */
+  --bb-syntax-class:      hsl(280, 45%, 40%);   /* purple — class names/types */
+  --bb-syntax-tag:        hsl(15, 65%, 40%);    /* coral — HTML tags */
+  --bb-syntax-attr:       hsl(35, 65%, 38%);    /* gold — attr names */
+  --bb-syntax-property:   hsl(190, 55%, 35%);   /* CSS properties */
+  --bb-syntax-selector:   hsl(280, 45%, 40%);   /* CSS selectors */
+  --bb-syntax-punctuation: hsl(220, 10%, 45%);
+}
+
+/* ── Dark mode ────────────────────────────────────────────── */
+
+.theme-dark {
+  /* Backgrounds — slight blue-green tint, never pure black */
+  --background-primary:           hsl(220, 12%, 11%);
+  --background-primary-alt:       hsl(220, 10%, 14%);
+  --background-secondary:         hsl(220, 12%, 9%);
+  --background-secondary-alt:     hsl(220, 10%, 7%);
+
+  /* Borders */
+  --background-modifier-border:        hsla(0, 0%, 100%, 0.08);
+  --background-modifier-border-hover:  hsla(0, 0%, 100%, 0.14);
+  --background-modifier-border-focus:  hsla(var(--bb-accent-h), 50%, 55%, 0.45); /* soft, not vivid */
+  --background-modifier-hover:         hsla(0, 0%, 100%, 0.05);
+  --background-modifier-active-hover:  hsla(var(--bb-accent-h), 50%, 55%, 0.16);
+
+  /* Text */
+  --text-normal:       hsl(220, 10%, 88%);
+  --text-muted:        hsl(220, 8%, 60%);
+  --text-faint:        hsl(220, 6%, 45%);
+  --text-on-accent:    hsl(146, 30%, 98%); /* tinted near-white, not pure #fff */
+
+  /* Accent palette — calibrated for ≥4.5:1 contrast on white text */
+  --color-accent:           hsl(var(--bb-accent-h), 55%, 42%);
+  --color-accent-hsl:       var(--bb-accent-h), 55%, 42%;
+  --interactive-accent:     hsl(var(--bb-accent-h), 55%, 42%);
+  --interactive-accent-hover: hsl(var(--bb-accent-h), 60%, 50%);
+  --text-accent:            hsl(var(--bb-accent-h), 50%, 60%); /* lighter — on dark bg, not white */
+  --text-accent-hover:      hsl(var(--bb-accent-h), 55%, 70%);
+
+  /* Accent washes — keep base in lockstep with --interactive-accent for consistency */
+  --bb-accent-soft: hsla(var(--bb-accent-h), 55%, 50%, 0.10);
+  --bb-accent-mid:  hsla(var(--bb-accent-h), 55%, 50%, 0.20);
+  --bb-accent-base: hsl(var(--bb-accent-h), 55%, 42%);
+  --bb-accent-tint: hsl(var(--bb-accent-h), 50%, 60%);
+
+  /* Code */
+  --code-background:  hsla(0, 0%, 100%, 0.04);
+  --code-normal:      hsl(220, 10%, 88%);
+
+  /* Caret + selection */
+  --caret-color:      hsl(var(--bb-accent-h), 50%, 60%);
+  --text-selection:   hsla(var(--bb-accent-h), 50%, 50%, 0.30);
+
+  /* Highlight — warm amber, soft */
+  --text-highlight-bg: hsla(40, 70%, 55%, 0.30);
+
+  /* Glass — dark material */
+  --bb-glass-tint:        hsla(220, 14%, 13%, 0.62);
+  --bb-glass-tint-strong: hsla(220, 14%, 13%, 0.78);
+  --bb-glass-tint-soft:   hsla(220, 12%, 14%, 0.45);
+  --bb-glass-highlight:   hsla(0, 0%, 100%, 0.08);
+  --bb-glass-edge:        hsla(0, 0%, 100%, 0.05);
+  --bb-glass-shadow:      0 1px 2px hsla(0, 0%, 0%, 0.30),
+                          0 8px 24px hsla(0, 0%, 0%, 0.40),
+                          0 24px 48px hsla(0, 0%, 0%, 0.30);
+  --bb-glass-shadow-lift: 0 2px 4px hsla(0, 0%, 0%, 0.40),
+                          0 16px 40px hsla(0, 0%, 0%, 0.55),
+                          0 40px 80px hsla(0, 0%, 0%, 0.40);
+
+  /* Syntax highlighting palette (dark mode) — calmer lightness so code
+   * doesn't shout. Same hue family as light mode for cross-mode consistency. */
+  --bb-syntax-comment:    hsl(220, 8%, 50%);
+  --bb-syntax-keyword:    hsl(15, 60%, 65%);    /* warm coral */
+  --bb-syntax-string:     hsl(146, 45%, 60%);   /* sage */
+  --bb-syntax-number:     hsl(35, 65%, 65%);    /* amber */
+  --bb-syntax-function:   hsl(190, 50%, 65%);   /* cyan */
+  --bb-syntax-class:      hsl(280, 40%, 70%);   /* purple */
+  --bb-syntax-tag:        hsl(15, 55%, 65%);
+  --bb-syntax-attr:       hsl(35, 55%, 70%);
+  --bb-syntax-property:   hsl(190, 50%, 65%);
+  --bb-syntax-selector:   hsl(280, 40%, 70%);
+  --bb-syntax-punctuation: hsl(220, 8%, 60%);
+}
+
+/* Kill the cascade trap: NEVER let hover/focus borders inherit accent */
+body {
+  --accent-border-width: 0px;
+}
+
+/* ============================================================================
+ * 2. Base typography
+ * ============================================================================ */
+
+body {
+  --font-text:      'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-monospace: 'JetBrains Mono', 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-text);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================================
+ * 3. Title bar + window chrome — macOS-respectful
+ * ============================================================================ */
+
+.titlebar,
+.titlebar-button-container,
+.titlebar-button,
+.titlebar-inner,
+.window-controls,
+.window-controls-button {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Title bar nav arrows */
+.titlebar .clickable-icon {
+  border: none !important;
+  outline: none !important;
+}
+
+/* ============================================================================
+ * 4. Tab bar
+ * ============================================================================ */
+
+.workspace-tab-header-container {
+  border: none !important;
+  background: transparent !important;
+  padding: 6px 6px 0 6px;
+}
+
+/* Tab — softly rounded all corners (less squared, more refined).
+ * Box-shadow inset bottom stripes follow the radius cleanly. */
+.workspace-tab-header {
+  border: none !important;
+  outline: none !important;
+  border-radius: var(--bb-radius-s) !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  padding: 0 14px;
+  height: 32px;
+  margin: 0 2px 0 0;
+  transition: background var(--bb-duration-base) var(--bb-ease),
+              box-shadow var(--bb-duration-base) var(--bb-ease);
+}
+
+/* Hover: just a soft tint — no catchlight, no side hairlines, no weird
+ * edge lighting. Bottom 1px accent foot to preview activation. */
+.workspace-tab-header:not(.is-active):hover {
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow:
+    inset 0 -1px 0 0 var(--bb-accent-foot) !important;
+}
+
+/* Active tab — clean glass + 2px accent bottom stripe.
+ * No top catchlight, no side hairlines (simpler, less visual noise). */
+.workspace-tab-header.is-active {
+  background: var(--bb-glass-tint) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(150%);
+  box-shadow:
+    inset 0 -2px 0 0 var(--bb-accent-base) !important;
+}
+
+/* Active tab title gets a subtle accent dot inside, replaces the stripe */
+.workspace-tab-header.is-active .workspace-tab-header-inner-title {
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+/* Close X — hidden by default; revealed only when the parent tab is hovered or
+ * active. Round shape, subtle hover bg, no catchlight (don't fight the tab). */
+.workspace-tab-header-inner-close-button {
+  border: none !important;
+  outline: none !important;
+  opacity: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: background var(--bb-duration-fast) var(--bb-ease),
+              opacity var(--bb-duration-fast) var(--bb-ease);
+}
+
+/* Default: invisible AND non-interactive (so it doesn't even reserve hit area) */
+.workspace-tab-header:not(:hover):not(.is-active) .workspace-tab-header-inner-close-button {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+.workspace-tab-header:hover .workspace-tab-header-inner-close-button,
+.workspace-tab-header.is-active .workspace-tab-header-inner-close-button {
+  opacity: 0.55 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.workspace-tab-header-inner-close-button:hover {
+  opacity: 1 !important;
+  background: hsla(0, 0%, 100%, 0.10) !important;
+  color: var(--text-normal) !important;
+  box-shadow: none !important;
+}
+
+.theme-light .workspace-tab-header-inner-close-button:hover {
+  background: hsla(0, 0%, 0%, 0.08) !important;
+}
+
+/* Tab title color — readable on hover, full strength on active.
+ * Inactive tabs only mute slightly; hovered tabs go full text-normal. */
+.workspace-tab-header:not(.is-active) .workspace-tab-header-inner-title {
+  color: var(--text-muted);
+  transition: color var(--bb-duration-fast) var(--bb-ease);
+}
+
+.workspace-tab-header:not(.is-active):hover .workspace-tab-header-inner-title {
+  color: var(--text-normal);
+}
+
+.workspace-tab-header.is-active .workspace-tab-header-inner-title {
+  color: var(--text-normal);
+}
+
+/* Kill the vertical divider between tabs — doesn't fit the floating pill aesthetic */
+.workspace-tab-header,
+.workspace-tab-header::before,
+.workspace-tab-header::after {
+  border-right: none !important;
+  border-left: none !important;
+}
+
+.workspace-tab-header-container-inner > .workspace-tab-header + .workspace-tab-header {
+  border-left: none !important;
+  margin-left: 2px !important;
+}
+
+.workspace-tab-header-new-tab,
+.mod-new-tab-button {
+  border: none !important;
+  outline: none !important;
+}
+
+/* ============================================================================
+ * 5. Sidebar / ribbon icons
+ * ============================================================================ */
+
+/* Ribbon — translucent vertical strip with vibrancy */
+.workspace-ribbon {
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate));
+  border: none !important;
+  box-shadow: inset -1px 0 0 var(--bb-glass-edge) !important;
+}
+
+.workspace-ribbon .side-dock-ribbon-action,
+.clickable-icon,
+.view-action,
+.workspace-drawer-vault-switcher,
+.status-bar-item .clickable-icon {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: transparent;
+  border-radius: var(--bb-radius-m);
+  transition: background var(--bb-duration-fast) var(--bb-ease),
+              color var(--bb-duration-fast) var(--bb-ease);
+}
+
+.clickable-icon:hover,
+.workspace-ribbon .side-dock-ribbon-action:hover,
+.view-action:hover,
+.workspace-drawer-vault-switcher:hover {
+  background: var(--bb-glass-tint-soft) !important;
+  box-shadow: inset 0 1px 0 var(--bb-glass-highlight) !important;
+}
+
+/* Real keyboard focus only */
+.clickable-icon:focus-visible,
+.view-action:focus-visible,
+.workspace-ribbon .side-dock-ribbon-action:focus-visible {
+  outline: 2px solid var(--bb-focus-ring) !important;
+  outline-offset: 1px !important;
+}
+
+/* Active state (selected sidebar tab) — Liquid accent pill */
+.workspace-ribbon .side-dock-ribbon-action.is-active,
+.clickable-icon.is-active {
+  background: var(--bb-accent-fill-mid) !important;
+  color: var(--text-accent) !important;
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.10),
+    inset 0 0 0 1px var(--bb-accent-ring-mid) !important;
+}
+
+.workspace-ribbon .side-dock-ribbon-action.is-active:hover,
+.clickable-icon.is-active:hover {
+  background: var(--bb-accent-fill-strong) !important;
+}
+
+/* ============================================================================
+ * 6. File explorer — Ono-Sendai pattern (absolute chevron)
+ *
+ * Why this works:
+ *   - Files AND folders share padding-left: 32px
+ *   - Chevron is position:absolute at left:9px → occupies x=9..23
+ *   - Text starts at x=32 → 9px buffer to chevron
+ *   - No flex flow conflicts → no metric drift between files vs folders
+ * ============================================================================ */
+
+.workspace-leaf-content[data-type="file-explorer"] .nav-file-title,
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder-title,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.nav-file-title,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.nav-folder-title {
+  padding: var(--bb-row-padding-y) var(--bb-row-padding-x) var(--bb-row-padding-y) var(--bb-row-padding-l-with-chevron) !important;
+  padding-inline-start: var(--bb-row-padding-l-with-chevron) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  position: relative !important;
+  border-radius: var(--bb-radius-s) !important;
+}
+
+/* Chevron — absolute-positioned in the row's left padding zone.
+ * Tightened to fit the new Obsidian inline padding-inline-start: 18px
+ * on top-level folders (was 32). Chevron at left:2, width:12 occupies
+ * x=2-14, leaving 4px gap to text at x=18. */
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder-collapse-indicator {
+  position: absolute !important;
+  left: 2px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 12px !important;
+  height: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--text-muted) !important;
+}
+
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder.is-collapsed .nav-folder-collapse-indicator {
+  transform: translateY(-50%) rotate(-90deg) !important;
+}
+
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder-collapse-indicator svg {
+  width: 10px !important;
+  height: 10px !important;
+  margin: 0 !important;
+}
+
+/* Reset any pseudo-elements */
+.workspace-leaf-content[data-type="file-explorer"] .nav-file-title::before,
+.workspace-leaf-content[data-type="file-explorer"] .nav-file-title::after,
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder-title::before,
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder-title::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Row-to-row spacing */
+.workspace-leaf-content[data-type="file-explorer"] .nav-file,
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder {
+  margin: 0 !important;
+}
+
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self {
+  min-height: unset !important;
+}
+
+/* Hover — soft glass tint (no full blur — perf on a long file list) */
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self:hover {
+  background: var(--bb-glass-tint-soft) !important;
+  box-shadow: inset 0 1px 0 var(--bb-glass-highlight) !important;
+}
+
+/* Active (selected file) — vibrant accent glass with inner catchlight + ring */
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.is-active {
+  background: var(--bb-accent-fill-mid) !important;
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.12),
+    inset 0 0 0 1px var(--bb-accent-ring-mid) !important;
+  color: var(--text-normal) !important;
+}
+
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.is-active .nav-file-title-content,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.is-active .nav-folder-title-content {
+  color: var(--text-accent) !important;
+  font-weight: 600;
+}
+
+/* Typographic hierarchy: folders BOLD, files lighter + slightly muted.
+ * Adds clear distinction between containers (folders) and content (files)
+ * without relying on icon space. */
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder-title-content {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.workspace-leaf-content[data-type="file-explorer"] .nav-file-title-content {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* On hover, lift the file color to text-normal so the eye can read it
+ * before clicking */
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self:hover .nav-file-title-content {
+  color: var(--text-normal);
+}
+
+/* Nested children — indent + subtle guide line */
+.workspace-leaf-content[data-type="file-explorer"] .nav-folder-children {
+  padding-inline-start: 10px !important;
+  margin-inline-start: 6px !important;
+  border-inline-start: 1px solid var(--background-modifier-border) !important;
+}
+
+/* ============================================================================
+ * 7. Sidebar panels — search, bookmarks, graph filter sections
+ * ============================================================================ */
+
+/* Search input — Liquid glass capsule */
+.search-input-container {
+  border: none !important;
+  outline: none !important;
+  border-radius: var(--bb-radius-l) !important;
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge) !important;
+  transition: box-shadow var(--bb-duration-base) var(--bb-ease),
+              background var(--bb-duration-base) var(--bb-ease);
+}
+
+/* Subtle Tahoe-style focus: thin accent ring that follows the radius, no native outline */
+.search-input-container:focus-within {
+  background: var(--bb-glass-tint) !important;
+  outline: none !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1.5px var(--bb-focus-ring) !important;
+}
+
+/* Kill all native and Obsidian-default outlines on the input itself —
+ * the container's box-shadow is the only focus indicator. */
+.search-input-container input,
+.search-input-container input:focus,
+.search-input-container input:focus-visible,
+.search-input-container input:active {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.search-input-container input {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* Graph filter — ONE outer glass panel containing flat section rows.
+ * (Previously both .graph-controls AND .graph-control-section got the glass
+ * treatment, creating nested cards with doubled top-edge lines — visible
+ * especially in light mode. Now only the outer wrapper is a card.) */
+.graph-controls {
+  border: none !important;
+  outline: none !important;
+  background: var(--bb-glass-tint) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate));
+  border-radius: var(--bb-radius-l) !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge),
+    var(--bb-glass-shadow) !important;
+  margin: 8px !important;
+  overflow: hidden;
+}
+
+/* Section — flat structural wrapper, NOT a card. Shrinks to its visible
+ * child (header). Padding + min-height stripped because Obsidian's defaults
+ * leave a phantom bottom gap below the header when the children container
+ * is collapsed/empty. */
+.graph-control-section {
+  display: flex !important;
+  flex-direction: column !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Some Obsidian builds wrap header + children in an inner .tree-item;
+ * flatten that too so the section truly shrinks to its label row. */
+.graph-control-section > .tree-item,
+.graph-controls > .tree-item {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* NOTE: Don't override .graph-controls' position — Obsidian uses position:absolute
+ * on it to float the panel over the graph canvas. Overriding to relative collapses
+ * the panel into normal flow and it disappears. */
+
+/* Section header — uniform 32px row. max-height locks against any inherited
+ * Obsidian padding that would otherwise stretch the row. Selector dropped
+ * the `>` combinator so it matches whether or not the row sits behind an
+ * intermediate .tree-item wrapper. */
+.graph-controls .tree-item-self,
+.graph-control-section .tree-item-self {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 14px 0 30px !important;
+  padding-inline-start: 30px !important;
+  color: var(--text-normal) !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1;
+  flex: 0 0 auto !important;
+}
+
+/* Section divider: 1px line as ::before, inset 12px from each edge so it
+ * doesn't extend to the rounded panel edges. First child has no divider. */
+.graph-controls .tree-item-self::before,
+.graph-control-section .tree-item-self::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: var(--bb-glass-edge);
+  pointer-events: none;
+}
+
+.graph-control-section:first-child .tree-item-self::before,
+.graph-controls > div:first-child .tree-item-self::before,
+.graph-controls > .graph-control-section:first-of-type .tree-item-self::before {
+  display: none;
+}
+
+/* Expanded section content — modest horizontal insets, tight vertical
+ * rhythm, small bottom padding so the divider above the next section sits
+ * close to the last setting row. */
+.graph-controls .tree-item-children,
+.graph-control-section .tree-item-children {
+  margin: 0 !important;
+  padding: 4px 14px 14px 14px !important;
+  min-height: 0 !important;
+}
+
+/* Setting rows inside a graph section — flat, no separators, 10px row gap. */
+.graph-controls .setting-item,
+.graph-control-section .setting-item {
+  padding: 5px 0 !important;
+  margin: 0 !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  min-height: 0 !important;
+}
+
+.graph-controls .setting-item:last-child,
+.graph-control-section .setting-item:last-child {
+  padding-bottom: 0 !important;
+}
+
+.graph-controls .setting-item:first-child,
+.graph-control-section .setting-item:first-child {
+  padding-top: 4px !important;
+}
+
+/* Search-input within a section sits between the header and the first
+ * toggle row. Tight margins keep it visually anchored to the section. */
+.graph-controls .search-input-container,
+.graph-control-section .search-input-container {
+  margin: 4px 0 6px 0 !important;
+}
+
+.graph-controls .tree-item-children:empty,
+.graph-control-section .tree-item-children:empty,
+.graph-controls .is-collapsed > .tree-item-children,
+.graph-control-section.is-collapsed > .tree-item-children,
+.graph-control-section .tree-item.is-collapsed > .tree-item-children,
+.graph-control-section .tree-item-self.is-collapsed ~ .tree-item-children,
+.graph-control-section.is-collapsed .setting-item,
+.graph-controls .is-collapsed .setting-item {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Belt-and-braces: any element inside a graph-control-section that's
+ * structurally empty (no children at all) loses display so it can never
+ * contribute to section height. Excludes interactive leaves. */
+.graph-control-section > *:empty:not(.tree-item-self):not(input):not(button):not(svg) {
+  display: none !important;
+}
+
+/* Section hover: subtle glass-soft tint, not solid */
+.graph-controls .tree-item-self:hover,
+.graph-control-section .tree-item-self:hover {
+  background: var(--bb-glass-tint-soft) !important;
+}
+
+/* Chevron — absolute-positioned in the 30px label-start zone, vertically
+ * centered against the fixed 32px row height. Pure top:50% / translateY(-50%)
+ * works correctly now because the row height is integer-pixel exact. */
+.graph-controls .tree-item-self .collapse-icon,
+.graph-control-section .tree-item-self .collapse-icon,
+.graph-controls .tree-item-self .tree-item-icon,
+.graph-control-section .tree-item-self .tree-item-icon {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 12px !important;
+  height: 12px !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--text-muted) !important;
+  opacity: 0.75;
+  transition: opacity var(--bb-duration-fast) var(--bb-ease),
+              color var(--bb-duration-fast) var(--bb-ease),
+              transform var(--bb-duration-fast) var(--bb-ease);
+}
+
+/* Collapsed state — rotate to point right, preserve vertical centering */
+.graph-controls .tree-item.is-collapsed .tree-item-self .collapse-icon,
+.graph-controls .tree-item.is-collapsed .tree-item-self .tree-item-icon,
+.graph-control-section.is-collapsed .tree-item-self .collapse-icon,
+.graph-control-section.is-collapsed .tree-item-self .tree-item-icon,
+.graph-controls .tree-item-self.is-collapsed .collapse-icon,
+.graph-controls .tree-item-self.is-collapsed .tree-item-icon,
+.graph-control-section .tree-item-self.is-collapsed .collapse-icon,
+.graph-control-section .tree-item-self.is-collapsed .tree-item-icon {
+  transform: translateY(-50%) rotate(-90deg) !important;
+}
+
+.graph-controls .tree-item-self:hover .collapse-icon,
+.graph-controls .tree-item-self:hover .tree-item-icon,
+.graph-control-section .tree-item-self:hover .collapse-icon,
+.graph-control-section .tree-item-self:hover .tree-item-icon {
+  opacity: 1;
+  color: var(--text-normal) !important;
+}
+
+.graph-controls .tree-item-self .collapse-icon svg,
+.graph-control-section .tree-item-self .collapse-icon svg,
+.graph-controls .tree-item-self .tree-item-icon svg,
+.graph-control-section .tree-item-self .tree-item-icon svg {
+  width: 12px !important;
+  height: 12px !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+.graph-controls .tree-item-self .tree-item-inner,
+.graph-control-section .tree-item-self .tree-item-inner {
+  flex: 1 !important;
+  min-width: 0 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+
+/* Graph control buttons (refresh, close) — render in their natural DOM flow at the
+ * top of the panel. Just space them out and give them clean hover affordance. */
+.graph-controls-button {
+  padding: 4px !important;
+  margin-left: 4px !important;
+  width: 22px !important;
+  height: 22px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--text-muted) !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: var(--bb-radius-s) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background var(--bb-duration-fast) var(--bb-ease),
+              color var(--bb-duration-fast) var(--bb-ease);
+}
+
+.graph-controls-button:hover {
+  color: var(--text-normal) !important;
+  background: var(--background-modifier-hover) !important;
+}
+
+/* Bookmarks pane — COLORS ONLY. No layout, no widths, no positions, no flex.
+ * Obsidian's default layout works; previous attempts at restructuring caused
+ * centered text and overlapping icons. Only style what's already laid out. */
+
+/* Children container: indent + 1px guide line at x=12 (margin-left: 12px). */
+.workspace-leaf-content[data-type="bookmarks"] .tree-item-children {
+  padding-inline-start: 10px !important;
+  margin-inline-start: 12px !important;
+  margin-left: 12px !important;
+  border-inline-start: 1px solid var(--background-modifier-border) !important;
+}
+
+/* Force bookmark group rows to have these exact margin/padding values.
+ * Conditional transforms compensate for whichever inline value Obsidian
+ * chooses, all converging on visual position 0 (panel left edge). */
+.tree-item-self.bookmark.mod-collapsible.is-clickable {
+  margin-inline-start: 0 !important;
+  padding-inline-start: 24px !important;
+}
+
+/* Coverage matrix: every Obsidian-set inline value → visual at x=0 */
+.tree-item-self.bookmark.mod-collapsible.is-clickable[style*="margin-inline-start: 0px"] {
+  transform: translateX(0) !important;
+}
+
+.tree-item-self.bookmark.mod-collapsible.is-clickable[style*="margin-inline-start: -2px"] {
+  transform: translateX(2px) !important;
+}
+
+.tree-item-self.bookmark.mod-collapsible.is-clickable[style*="margin-inline-start: -4px"] {
+  transform: translateX(4px) !important;
+}
+
+.tree-item-self.bookmark.mod-collapsible.is-clickable[style*="margin-inline-start: 16px"] {
+  transform: translateX(-16px) !important;
+}
+
+/* Shift the bookmarks pane's floated nav-header 24px to the left.
+ * Can't use transform — the float-up rule has transform:none !important.
+ * Instead, bump the `right:` offset by 24px (50 → 74) so the absolutely-
+ * positioned nav-header anchors further from the panel's right edge. */
+body div.workspace-split.mod-left-split div.workspace-leaf-content[data-type="bookmarks"] > div.nav-header,
+body div.workspace-split.mod-right-split div.workspace-leaf-content[data-type="bookmarks"] > div.nav-header {
+  right: 74px !important;
+}
+
+/* Hover: bg + catchlight + box-shadow trick to extend the hover area 16px
+ * to the LEFT, visually covering the indent zone (where the line lives).
+ * Line shows by default; on hover the row's bg "swallows" the line area. */
+.workspace-leaf-content[data-type="bookmarks"] .tree-item-self:hover {
+  background: var(--bb-glass-tint-soft) !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    -16px 0 0 var(--bb-glass-tint-soft) !important;
+}
+
+/* Active pill — same bg extension so the active leaf reads panel-wide */
+.workspace-leaf-content[data-type="bookmarks"] .tree-item-self.is-active {
+  background: var(--bb-accent-fill-mid) !important;
+  color: var(--text-normal) !important;
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.12),
+    inset 0 0 0 1px var(--bb-accent-ring-mid),
+    -16px 0 0 var(--bb-accent-fill-mid) !important;
+}
+
+/* Typography: groups bold + text-normal, leaves regular + muted.
+ * Target the .tree-item-inner-text span (bookmarks-specific). */
+.workspace-leaf-content[data-type="bookmarks"] .tree-item-self.mod-collapsible .tree-item-inner-text {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.workspace-leaf-content[data-type="bookmarks"] .tree-item-self:not(.mod-collapsible) .tree-item-inner-text {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.workspace-leaf-content[data-type="bookmarks"] .tree-item-self:not(.mod-collapsible):not(.is-active):hover .tree-item-inner-text {
+  color: var(--text-normal);
+}
+
+.workspace-leaf-content[data-type="bookmarks"] .tree-item-self.is-active .tree-item-inner-text {
+  color: var(--text-accent) !important;
+  font-weight: 600;
+}
+
+/* Subtle leaf file icons (color only, no size/position changes) */
+.workspace-leaf-content[data-type="bookmarks"] .tree-item-self:not(.mod-collapsible) .tree-item-icon {
+  color: var(--text-faint);
+  opacity: 0.65;
+}
+
+/* Same protection for the file-explorer chevrons + icons (consistency) */
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self .tree-item-icon,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self .collapse-icon,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self:hover .tree-item-icon,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self:hover .collapse-icon {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ============================================================================
+ * 8. Toggles — refined pills
+ * ============================================================================ */
+
+/* Toggle pill — refined Linear/Stripe-style proportions
+ *   Track: 36 × 20  (1.8 ratio, less cramped than 32×18)
+ *   Thumb: 16, inset 2px from top/bottom/sides
+ *   Travel: 2px (off) → 18px (on)
+ *   Thumb stays near-white in both states for clear positional read against any track color
+ *   No border on the track; the bg fill does the work */
+.checkbox-container {
+  height: 20px !important;
+  width: 36px !important;
+  border: none !important;
+  background-color: var(--background-modifier-border) !important;
+  border-radius: 999px !important;
+  box-shadow: inset 0 0 0 1px hsla(0, 0%, 0%, 0.04) !important;
+  transition: background-color var(--bb-duration-base) var(--bb-ease);
+  cursor: pointer;
+}
+
+.theme-dark .checkbox-container {
+  background-color: hsl(220, 8%, 22%) !important;
+  box-shadow: inset 0 0 0 1px hsla(0, 0%, 0%, 0.25) !important;
+}
+
+.checkbox-container:hover {
+  background-color: hsl(220, 6%, 28%) !important;
+}
+
+.theme-light .checkbox-container:hover {
+  background-color: hsl(220, 8%, 80%) !important;
+}
+
+.checkbox-container::after {
+  /* Liquid thumb — top-edge specular highlight + drop shadow + ring */
+  position: absolute !important;
+  top: 2px !important;
+  bottom: auto !important;
+  left: 2px !important;
+  right: auto !important;
+  inset-inline-start: 2px !important;
+  inset-inline-end: auto !important;
+  inset-block-start: 2px !important;
+  inset-block-end: auto !important;
+  margin: 0 !important;
+  height: 16px !important;
+  width: 16px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background-color: var(--text-on-accent) !important;
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.50),
+    0 1px 2px var(--bb-shadow-thumb),
+    0 2px 6px var(--bb-shadow-thumb-soft),
+    0 0 0 0.5px var(--bb-shadow-thumb-ring) !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition: transform var(--bb-duration-base) var(--bb-ease);
+}
+
+.checkbox-container.is-enabled {
+  background-color: var(--bb-accent-base) !important;
+  box-shadow: inset 0 0 0 1px hsla(var(--bb-accent-h), 55%, 30%, 0.30) !important;
+}
+
+.checkbox-container.is-enabled:hover {
+  background-color: var(--interactive-accent-hover) !important;
+}
+
+.checkbox-container.is-enabled::after {
+  background-color: var(--text-on-accent) !important;
+  /* Same nulled anchors so Obsidian's :is-enabled override can't shift left/right */
+  top: 2px !important;
+  bottom: auto !important;
+  left: 2px !important;
+  right: auto !important;
+  inset-inline-start: 2px !important;
+  inset-inline-end: auto !important;
+  transform: translate3d(16px, 0, 0) !important;
+  box-shadow: 0 1px 2px hsla(var(--bb-accent-h), 55%, 15%, 0.35),
+              0 0 0 0.5px hsla(var(--bb-accent-h), 55%, 15%, 0.10) !important;
+}
+
+.checkbox-container:focus-visible {
+  outline: 2px solid var(--bb-accent-tint) !important;
+  outline-offset: 2px !important;
+}
+
+/* ============================================================================
+ * 9. Buttons
+ * ============================================================================ */
+
+/* Primary CTA — saturated accent with glass top-edge highlight (Liquid button) */
+button.mod-cta {
+  background: var(--bb-accent-base) !important;
+  color: var(--text-on-accent) !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: var(--bb-radius-m) !important;
+  padding: 7px 16px !important;
+  font-weight: 500 !important;
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.20),
+    inset 0 0 0 1px hsla(var(--bb-accent-h), 55%, 30%, 0.40),
+    0 1px 2px hsla(var(--bb-accent-h), 55%, 15%, 0.25),
+    0 4px 12px hsla(var(--bb-accent-h), 55%, 15%, 0.18) !important;
+  transition: background var(--bb-duration-fast) var(--bb-ease),
+              transform var(--bb-duration-fast) var(--bb-ease),
+              box-shadow var(--bb-duration-fast) var(--bb-ease);
+}
+
+button.mod-cta:hover {
+  background: var(--interactive-accent-hover) !important;
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.25),
+    inset 0 0 0 1px hsla(var(--bb-accent-h), 55%, 30%, 0.40),
+    0 2px 4px hsla(var(--bb-accent-h), 55%, 15%, 0.30),
+    0 8px 20px hsla(var(--bb-accent-h), 55%, 15%, 0.25) !important;
+}
+
+button.mod-cta:active {
+  transform: translateY(0.5px);
+}
+
+button.mod-cta:focus-visible {
+  outline: 2px solid var(--bb-accent-tint) !important;
+  outline-offset: 2px !important;
+}
+
+/* Secondary buttons — translucent glass capsule.
+ * Scoped to modal/settings contexts ONLY. Chrome icon-buttons (back/forward,
+ * tab close X, +new-tab, ribbon icons) need to stay flush + transparent. */
+.modal button:not(.mod-cta):not(.clickable-icon),
+.modal-button-container button:not(.mod-cta):not(.clickable-icon),
+.setting-item button:not(.mod-cta):not(.clickable-icon),
+.community-plugin-button button:not(.mod-cta):not(.clickable-icon) {
+  border-radius: var(--bb-radius-m) !important;
+  border: none !important;
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge) !important;
+  padding: 6px 14px !important;
+  transition: background var(--bb-duration-fast) var(--bb-ease),
+              box-shadow var(--bb-duration-fast) var(--bb-ease),
+              transform var(--bb-duration-fast) var(--bb-ease);
+}
+
+.modal button:not(.mod-cta):not(.clickable-icon):hover,
+.modal-button-container button:not(.mod-cta):not(.clickable-icon):hover,
+.setting-item button:not(.mod-cta):not(.clickable-icon):hover {
+  background: var(--bb-glass-tint) !important;
+}
+
+.modal button:not(.mod-cta):not(.clickable-icon):active,
+.modal-button-container button:not(.mod-cta):not(.clickable-icon):active,
+.setting-item button:not(.mod-cta):not(.clickable-icon):active {
+  transform: translateY(0.5px);
+}
+
+/* Chrome icon-buttons (back/forward, +new-tab, tab close X, file-explorer header
+ * actions like new-note/new-folder/sort/expand) — flush, transparent,
+ * Tahoe-style soft glass hover. */
+.workspace-tab-header-new-tab,
+.mod-new-tab-button,
+.workspace-tab-header-inner-close-button,
+.view-actions button,
+.nav-buttons-container button,
+.nav-action-button,
+.titlebar button,
+button.clickable-icon {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: var(--bb-radius-m) !important;
+  padding: 5px !important;
+  margin: 0 1px !important;
+  transition: background var(--bb-duration-fast) var(--bb-ease),
+              color var(--bb-duration-fast) var(--bb-ease),
+              box-shadow var(--bb-duration-fast) var(--bb-ease);
+}
+
+.workspace-tab-header-new-tab:hover,
+.mod-new-tab-button:hover,
+.workspace-tab-header-inner-close-button:hover,
+.view-actions button:hover,
+.nav-buttons-container button:hover,
+.nav-action-button:hover,
+.titlebar button:hover,
+button.clickable-icon:hover {
+  background: var(--bb-glass-tint-soft) !important;
+  color: var(--text-normal) !important;
+  box-shadow: inset 0 1px 0 var(--bb-glass-highlight) !important;
+}
+
+/* Active state for chrome icon-buttons — Liquid pill, but TONED.
+ * Lucide stroke icons at width 2 read bright when given full --text-accent;
+ * use a desaturated accent so the pill emphasizes WITHOUT shouting.
+ * Active file in the tree should still be the loudest pixel. */
+.nav-action-button.is-active,
+.view-actions button.is-active {
+  background: var(--bb-accent-fill-soft) !important;
+  color: hsla(var(--bb-accent-h), 35%, 70%, 0.95) !important;
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.06),
+    inset 0 0 0 1px var(--bb-accent-ring-soft) !important;
+}
+
+.theme-light .nav-action-button.is-active,
+.theme-light .view-actions button.is-active {
+  background: var(--bb-accent-fill-soft) !important;
+  color: hsla(var(--bb-accent-h), 50%, 32%, 0.95) !important;
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.30),
+    inset 0 0 0 1px var(--bb-accent-ring-soft) !important;
+}
+
+/* ============================================================================
+ * 10. Markdown content
+ * ============================================================================ */
+
+.markdown-rendered h1 {
+  font-size: 1.8em;
+  margin-top: 0.6em;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.markdown-rendered h2 {
+  font-size: 1.4em;
+  margin-top: 1.4em;
+  line-height: 1.3;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid var(--background-modifier-border);
+  letter-spacing: -0.005em;
+}
+.markdown-rendered h3 { font-size: 1.15em; margin-top: 1em; line-height: 1.4; }
+.markdown-rendered h4 { font-size: 1.05em; }
+.markdown-rendered h5,
+.markdown-rendered h6 { font-size: 1em; color: var(--text-muted); }
+
+/* Inline links */
+.markdown-rendered a {
+  color: var(--text-accent);
+  text-decoration: none;
+  border-bottom: 1px solid hsla(var(--bb-accent-h), 55%, 50%, 0.30);
+  transition: border-color var(--bb-duration-fast) var(--bb-ease),
+              color var(--bb-duration-fast) var(--bb-ease);
+}
+
+.markdown-rendered a:hover {
+  color: var(--text-accent-hover);
+  border-bottom-color: var(--bb-accent-tint);
+}
+
+/* Internal links (wikilinks) */
+.markdown-rendered a.internal-link {
+  color: var(--text-accent);
+  border-bottom-style: dotted;
+}
+
+.markdown-rendered a.internal-link.is-unresolved {
+  color: var(--text-faint);
+  border-bottom-style: dashed;
+}
+
+/* Blockquotes — typographic convention (italic + indent + 1px hairline rule).
+ * 1px is below the absolute-ban threshold for side-stripes. The rule serves as a
+ * quotation-mark substitute (centuries-old convention), not a UI card affordance. */
+.markdown-rendered blockquote {
+  position: relative;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 0 0 1.25em !important;
+  margin: 1em 0;
+  font-style: italic;
+  color: var(--text-muted);
+  border-radius: 0 !important;
+}
+
+.markdown-rendered blockquote::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  bottom: 0.2em;
+  width: 1px;
+  background: var(--background-modifier-border);
+}
+
+/* Inline code — Liquid pill with subtle ring */
+.markdown-rendered code {
+  font-family: var(--font-monospace);
+  font-size: 0.88em;
+  background: var(--bb-glass-tint-soft);
+  padding: 1px 6px;
+  border-radius: var(--bb-radius-s);
+  box-shadow: inset 0 0 0 1px var(--bb-glass-edge);
+  color: var(--code-normal);
+}
+
+/* Code blocks — subtle glass card */
+.markdown-rendered pre {
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  border: none;
+  border-radius: var(--bb-radius-m);
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge);
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
+.markdown-rendered pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+/* Tables */
+.markdown-rendered table {
+  width: 100%;
+  font-size: 0.9em;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.markdown-rendered th,
+.markdown-rendered td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-rendered th {
+  font-weight: 600;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border-bottom: 2px solid var(--background-modifier-border);
+}
+
+.markdown-rendered tr:hover td {
+  background: var(--background-modifier-hover);
+}
+
+/* Horizontal rule */
+.markdown-rendered hr {
+  border: none;
+  border-top: 1px solid var(--background-modifier-border);
+  margin: 1.5em 0;
+}
+
+/* Lists */
+.markdown-rendered ul,
+.markdown-rendered ol {
+  padding-left: 1.4em;
+}
+
+.markdown-rendered li {
+  margin: 0.2em 0;
+}
+
+/* Callouts — glass card with accent vibrancy (no side-stripe; full radius) */
+.callout {
+  background: var(--bb-accent-fill-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  border: none;
+  border-radius: var(--bb-radius-l);
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-accent-ring-mid);
+  padding: 14px 16px;
+  margin: 1em 0;
+  --callout-color: var(--color-accent-hsl);
+}
+
+.callout-title {
+  font-weight: 600;
+  color: var(--text-accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.callout-icon {
+  color: var(--text-accent);
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+ * 11. Frontmatter properties — bimbiOS-aware
+ * ============================================================================ */
+
+.metadata-container {
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  border: none;
+  border-radius: var(--bb-radius-l);
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge);
+  padding: 14px 16px;
+  font-size: 0.92em;
+}
+
+.metadata-property {
+  border: none !important;
+}
+
+.metadata-property-key {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* bimbiOS-specific properties get accent treatment */
+.metadata-property[data-property-key="status"] .metadata-property-value,
+.metadata-property[data-property-key="lever"] .metadata-property-value,
+.metadata-property[data-property-key="type"] .metadata-property-value,
+.metadata-property[data-property-key="status"] .metadata-property-value > div,
+.metadata-property[data-property-key="lever"] .metadata-property-value > div,
+.metadata-property[data-property-key="type"] .metadata-property-value > div {
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
+/* ============================================================================
+ * 12. Tags + tasks
+ * ============================================================================ */
+
+.tag,
+a.tag {
+  background: var(--bb-tag-fill);
+  color: var(--text-accent);
+  border: none;
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: 0.85em;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: inset 0 0 0 1px var(--bb-tag-ring);
+  transition: background var(--bb-duration-fast) var(--bb-ease),
+              box-shadow var(--bb-duration-fast) var(--bb-ease);
+}
+
+.tag:hover,
+a.tag:hover {
+  background: var(--bb-tag-fill-hover);
+  color: var(--text-accent-hover);
+}
+
+/* Tasks plugin — done items faded */
+li[data-task="x"],
+li[data-task="X"],
+.task-list-item.is-checked,
+.markdown-rendered li.task-list-item input[type="checkbox"]:checked + * {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+/* Task checkboxes — accent when checked */
+.task-list-item input[type="checkbox"] {
+  accent-color: var(--bb-accent-base);
+}
+
+/* ============================================================================
+ * 13. Selection + caret
+ * ============================================================================ */
+
+::selection {
+  background: var(--text-selection) !important;
+  color: inherit !important;
+}
+
+.cm-cursor,
+.markdown-source-view .cm-cursor {
+  border-left: 2px solid var(--caret-color) !important;
+}
+
+/* ============================================================================
+ * 14. Status bar + vault switcher
+ * ============================================================================ */
+
+.status-bar {
+  border-top: 1px solid var(--bb-glass-edge) !important;
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate));
+  font-size: 11px;
+  color: var(--text-muted);
+  box-shadow: inset 0 1px 0 var(--bb-glass-highlight) !important;
+}
+
+.workspace-drawer-vault-switcher,
+.workspace-drawer-vault-switcher-container {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: var(--bb-radius-m);
+}
+
+.workspace-drawer-vault-switcher:hover {
+  background: var(--background-modifier-hover) !important;
+}
+
+/* ============================================================================
+ * 15. Modals + popovers
+ * ============================================================================ */
+
+/* Modal scrim — slight blur behind so the focused modal really pops */
+.modal-bg {
+  background: var(--bb-scrim);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+}
+
+/* Modal — strong Liquid glass with elevated shadow */
+.modal {
+  border-radius: var(--bb-radius-xl);
+  border: none;
+  background: var(--bb-glass-tint-strong);
+  backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate));
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge),
+    var(--bb-glass-shadow-lift);
+}
+
+/* Quick-switcher / suggestion popover — floating glass with vibrancy */
+.suggestion-container {
+  border-radius: var(--bb-radius-l);
+  border: none;
+  background: var(--bb-glass-tint-strong);
+  backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate));
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge),
+    var(--bb-glass-shadow-lift);
+  padding: 6px;
+  overflow: hidden;
+}
+
+.suggestion-item {
+  border-radius: var(--bb-radius-s);
+  padding: 6px 10px;
+  transition: background var(--bb-duration-fast) var(--bb-ease);
+}
+
+.suggestion-item.is-selected {
+  background: var(--bb-accent-ring-soft);
+  color: var(--text-accent);
+  box-shadow: inset 0 0 0 1px var(--bb-accent-ring-mid);
+}
+
+/* Tooltips — translucent capsule. Aggressively scoped to all variants
+ * (mod-top/bottom/left/right, body-prefixed) so Obsidian's intrinsic
+ * accent-colored tooltip (blue in some contexts) is fully overridden.
+ * z-index ensures tooltip floats above the toolbar that triggers it. */
+.tooltip,
+body .tooltip,
+.tooltip.mod-top,
+.tooltip.mod-bottom,
+.tooltip.mod-left,
+.tooltip.mod-right,
+.tooltip-arrow + .tooltip,
+div.tooltip {
+  background: var(--bb-glass-tint-strong) !important;
+  background-color: var(--bb-glass-tint-strong) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate)) !important;
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate)) !important;
+  color: var(--text-normal) !important;
+  border: none !important;
+  border-radius: var(--bb-radius-m) !important;
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
+  max-width: 240px !important;
+  z-index: 99999 !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge),
+    0 4px 16px hsla(0, 0%, 0%, 0.25) !important;
+}
+
+/* Tooltip arrow — hide entirely. Obsidian's arrow is a rotated div with
+ * its own background that doesn't pick up the .tooltip glass styling,
+ * rendering as a disconnected square fragment beside the pill. The
+ * tooltip's proximity to the cursor already communicates which element
+ * it describes; the arrow adds visual clutter without semantic value.
+ * (macOS Tahoe tooltips don't use arrows for this reason.) */
+.tooltip-arrow,
+.tooltip .tooltip-arrow,
+body .tooltip-arrow,
+div.tooltip-arrow {
+  display: none !important;
+  visibility: hidden !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Menu items (dropdowns, context menus) — use Liquid accent on hover/select,
+ * not Obsidian's bright accent. Matches the rest of the theme. */
+.menu-item {
+  border-radius: var(--bb-radius-s);
+  transition: background var(--bb-duration-fast) var(--bb-ease);
+}
+
+.menu-item:hover,
+.menu-item.selected,
+.menu-item.is-active {
+  background: var(--bb-accent-fill-mid) !important;
+  color: var(--text-accent) !important;
+}
+
+/* Menu container itself — glass card */
+.menu {
+  background: var(--bb-glass-tint-strong) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate)) !important;
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate)) !important;
+  border: none !important;
+  border-radius: var(--bb-radius-l) !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge),
+    var(--bb-glass-shadow-lift) !important;
+  padding: 6px !important;
+  z-index: 9999 !important;
+}
+
+/* ============================================================================
+ * 16. Graph view — color groups configured separately in graph.json
+ *    Theme contributes: panel chrome, line colors, node defaults
+ * ============================================================================ */
+
+.graph-view.color-fill {
+  fill: var(--text-muted);
+}
+
+.graph-view.color-line {
+  stroke: var(--background-modifier-border);
+  opacity: 0.6;
+}
+
+.graph-view.color-text {
+  fill: var(--text-normal);
+}
+
+.graph-view.color-fill-highlight {
+  fill: var(--bb-accent-base);
+}
+
+.graph-view.color-line-highlight {
+  stroke: var(--bb-accent-tint);
+}
+
+.graph-view.color-fill-tag {
+  fill: var(--text-accent);
+}
+
+.graph-view.color-fill-attachment {
+  fill: var(--text-faint);
+}
+
+/* ============================================================================
+ * 17a. Scrollbars — thin, near-invisible, macOS-style
+ * ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(0, 0%, 50%, 0.20);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background var(--bb-duration-base) var(--bb-ease);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsla(0, 0%, 50%, 0.40);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ============================================================================
+ * 17b. Resize handles — invisible until cursor approaches
+ * ============================================================================ */
+
+.workspace-leaf-resize-handle,
+.workspace-split.mod-vertical > .workspace-leaf-resize-handle,
+.workspace-split.mod-horizontal > .workspace-leaf-resize-handle {
+  background: transparent !important;
+  transition: background var(--bb-duration-base) var(--bb-ease);
+}
+
+.workspace-leaf-resize-handle:hover,
+.workspace-split.mod-vertical > .workspace-leaf-resize-handle:hover,
+.workspace-split.mod-horizontal > .workspace-leaf-resize-handle:hover {
+  background: hsla(var(--bb-accent-h), 55%, 50%, 0.30) !important;
+}
+
+/* ============================================================================
+ * 17c. Notices / toasts — glass capsule, floats over content
+ * ============================================================================ */
+
+.notice-container {
+  bottom: 24px !important;
+  right: 24px !important;
+}
+
+.notice {
+  background: var(--bb-glass-tint-strong) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate));
+  color: var(--text-normal) !important;
+  border: none !important;
+  border-radius: var(--bb-radius-l) !important;
+  padding: 12px 16px !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge),
+    var(--bb-glass-shadow-lift) !important;
+  font-size: 13px;
+}
+
+/* ============================================================================
+ * 17d. Vault switcher (bottom-left) — Liquid capsule
+ * ============================================================================ */
+
+.workspace-drawer-vault-switcher {
+  border-radius: var(--bb-radius-m) !important;
+  padding: 6px 10px !important;
+  transition: background var(--bb-duration-base) var(--bb-ease),
+              box-shadow var(--bb-duration-base) var(--bb-ease);
+}
+
+.workspace-drawer-vault-switcher:hover {
+  background: var(--bb-glass-tint-soft) !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge) !important;
+}
+
+/* ============================================================================
+ * 17e. Tables — glass header row, refined dividers
+ * ============================================================================ */
+
+.markdown-rendered th {
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  border-bottom: 1px solid var(--bb-glass-edge) !important;
+  font-weight: 600;
+}
+
+.markdown-rendered td {
+  border-bottom: 1px solid var(--bb-glass-edge);
+}
+
+.markdown-rendered tr:hover td {
+  background: var(--bb-glass-tint-soft);
+}
+
+/* ============================================================================
+ * 17f. Internal embeds (transclusions) — glass card with subtle elevation
+ * ============================================================================ */
+
+.markdown-rendered .internal-embed,
+.markdown-rendered .markdown-embed {
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  border: none !important;
+  border-radius: var(--bb-radius-l) !important;
+  padding: 14px 18px !important;
+  margin: 1em 0 !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge),
+    0 4px 16px hsla(0, 0%, 0%, 0.06) !important;
+}
+
+/* ============================================================================
+ * 17g. bimbiOS frontmatter property values (status/lever/type) — Liquid pill
+ * ============================================================================ */
+
+.metadata-property[data-property-key="status"] .metadata-property-value,
+.metadata-property[data-property-key="lever"] .metadata-property-value,
+.metadata-property[data-property-key="type"] .metadata-property-value {
+  display: inline-block;
+  background: var(--bb-tag-fill);
+  box-shadow: inset 0 0 0 1px var(--bb-tag-ring);
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
+/* ============================================================================
+ * 17h. List markers — refined dots
+ * ============================================================================ */
+
+.markdown-rendered ul > li::marker {
+  color: var(--text-faint);
+  font-size: 1.2em;
+}
+
+.markdown-rendered ol > li::marker {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ============================================================================
+ * 17i. Consolidate sidebar leaf header (view-actions) onto the tab-strip row
+ *
+ * Default Obsidian: tab strip on row 1 (folder/search/bookmark icons),
+ * view-header with its actions on row 2 (new-note/new-folder/sort/expand).
+ * Tahoe variant: float the view-header up so all chrome sits on a single row.
+ * ============================================================================ */
+
+/* Anchor for absolute children — broad selectors so we don't depend on
+ * Obsidian's exact intermediate wrappers (which have changed across versions). */
+.mod-left-split,
+.mod-right-split {
+  position: relative !important;
+}
+
+/* File explorer uses .nav-header > .nav-buttons-container for its action row.
+ * Search / Bookmarks / Graph use .view-header > .view-actions.
+ *
+ * Anchor: .workspace-tabs is the direct flex parent of the tab strip + the
+ * tab container holding the leaf. Making IT the positioned ancestor lets us
+ * float .nav-header up into the tab-strip row without crossing any other
+ * positioned containers. Maximum-specificity chain to defeat Obsidian's
+ * intrinsic styles. */
+
+body div.workspace-split.mod-left-split div.workspace-tabs,
+body div.workspace-split.mod-right-split div.workspace-tabs {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Float the nav-header / view-header up into the tab strip row, tucked just
+ * to the LEFT of the .sidebar-toggle.
+ * Bottom-aligned so icons share the same baseline as the tabs.
+ * IMPORTANT: scoped to DIRECT child of .workspace-leaf-content only — without
+ * the > selectors, nested view-headers inside stacked sub-panels (search +
+ * outline + properties etc.) would all float to the same coordinate and
+ * stack on top of each other, causing the icon overlap. */
+body div.workspace-split.mod-left-split div.workspace-leaf-content > div.nav-header,
+body div.workspace-split.mod-right-split div.workspace-leaf-content > div.nav-header,
+body div.workspace-split.mod-left-split div.workspace-leaf-content > div.view-header,
+body div.workspace-split.mod-right-split div.workspace-leaf-content > div.view-header {
+  position: absolute !important;
+  top: 0 !important;
+  right: 50px !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+  max-width: 60% !important;
+  height: 40px !important;        /* match tab-strip row height */
+  min-height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  padding: 0 0 6px 0 !important;  /* nudge: 4px up from baseline, 2px back down */
+  margin: 0 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: flex-end !important; /* push icons to the bottom of the row */
+  justify-content: flex-end !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  isolation: isolate !important;
+}
+
+body div.workspace-split.mod-left-split div.workspace-leaf-content > div.nav-header *,
+body div.workspace-split.mod-right-split div.workspace-leaf-content > div.nav-header *,
+body div.workspace-split.mod-left-split div.workspace-leaf-content > div.view-header *,
+body div.workspace-split.mod-right-split div.workspace-leaf-content > div.view-header * {
+  pointer-events: auto !important;
+}
+
+/* Tighten the floated nav-header / view-header buttons so they feel flush
+ * like the tabs + sidebar-toggle, not like centered-padded boxes. */
+body div.workspace-split.mod-left-split div.nav-header div.nav-action-button,
+body div.workspace-split.mod-right-split div.nav-header div.nav-action-button,
+body div.workspace-split.mod-left-split div.view-header button,
+body div.workspace-split.mod-right-split div.view-header button,
+body div.workspace-split.mod-left-split div.view-header .clickable-icon,
+body div.workspace-split.mod-right-split div.view-header .clickable-icon {
+  padding: 4px !important;
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: var(--bb-radius-s) !important;
+}
+
+body div.workspace-split.mod-left-split div.nav-header div.nav-buttons-container,
+body div.workspace-split.mod-right-split div.nav-header div.nav-buttons-container,
+body div.workspace-split.mod-left-split div.view-header div.view-actions,
+body div.workspace-split.mod-right-split div.view-header div.view-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important; /* push everything to the right; collapse button (last) lands at the corner */
+  flex-wrap: nowrap !important;          /* never wrap onto a second row */
+  gap: 6px !important;
+  padding: 0 !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+
+/* Both dock toggles — flush transparent backgrounds (Obsidian's intrinsic
+ * .sidebar-toggle-button uses --background-secondary which reads as a darker
+ * gray box in light mode against --background-primary). */
+body div.sidebar-toggle-button,
+body div.sidebar-toggle-button.mod-left,
+body div.sidebar-toggle-button.mod-right {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: var(--bb-radius-m) !important;
+}
+
+/* Left dock toggle stays in flex flow at the right end of the tab strip */
+body div.sidebar-toggle-button.mod-left {
+  margin-left: 8px !important;
+  margin-right: 6px !important;
+  flex-shrink: 0 !important;
+  z-index: 10000 !important;
+  position: relative !important;
+}
+
+/* Right dock toggle is absolutely pinned to the TOP-RIGHT corner of the
+ * right sidebar — always there, never shifted by view-actions count. */
+body div.workspace-split.mod-right-split div.sidebar-toggle-button.mod-right {
+  position: absolute !important;
+  top: 4px !important;
+  right: 6px !important;
+  margin: 0 !important;
+  z-index: 10001 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Hover for either toggle — soft glass tint, matches the rest of the
+ * chrome icon hover system, NEVER the darker --background-secondary fill */
+body div.sidebar-toggle-button:hover,
+body div.sidebar-toggle-button .clickable-icon:hover {
+  background: var(--bb-glass-tint-soft) !important;
+  background-color: var(--bb-glass-tint-soft) !important;
+}
+
+/* Defeat any transform / filter Obsidian may apply during slide animations
+ * to intermediates between .workspace-tabs (our anchor) and .nav-header.
+ * Without this, collapse-and-reopen sets a transform that creates a new
+ * containing block, breaking the absolute lookup.
+ * NOTE: .mod-left-split itself is left alone — that's where the actual
+ * slide animation lives. */
+body div.workspace-split.mod-left-split div.workspace-tabs,
+body div.workspace-split.mod-right-split div.workspace-tabs,
+body div.workspace-split.mod-left-split div.workspace-tab-container,
+body div.workspace-split.mod-right-split div.workspace-tab-container,
+body div.workspace-split.mod-left-split div.workspace-tab-header-container,
+body div.workspace-split.mod-right-split div.workspace-tab-header-container,
+body div.workspace-split.mod-left-split div.workspace-leaf,
+body div.workspace-split.mod-right-split div.workspace-leaf,
+body div.workspace-split.mod-left-split div.workspace-leaf-content,
+body div.workspace-split.mod-right-split div.workspace-leaf-content {
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
+  contain: none !important;
+  will-change: auto !important;
+}
+
+/* The button container inside — restore pointer events, lay out as a row */
+body .workspace-split.mod-left-split .nav-header .nav-buttons-container,
+body .workspace-split.mod-right-split .nav-header .nav-buttons-container,
+body .workspace-split.mod-left-split .view-header .view-actions,
+body .workspace-split.mod-right-split .view-header .view-actions {
+  pointer-events: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  height: auto !important;
+}
+
+/* Hide title/icon/nav chrome that would bubble up alongside the actions */
+.mod-left-split .view-header-title-container,
+.mod-right-split .view-header-title-container,
+.mod-left-split .view-header-left,
+.mod-right-split .view-header-left,
+.mod-left-split .view-header-nav-buttons,
+.mod-right-split .view-header-nav-buttons,
+.mod-left-split .view-header-icon,
+.mod-right-split .view-header-icon,
+.mod-left-split .view-header-title,
+.mod-right-split .view-header-title {
+  display: none !important;
+}
+
+/* The content area below — flush to the top of the leaf since nav-header is now absolute */
+.mod-left-split .workspace-leaf-content,
+.mod-right-split .workspace-leaf-content {
+  padding-top: 0 !important;
+}
+
+.mod-left-split .view-content,
+.mod-right-split .view-content,
+.mod-left-split .nav-files-container,
+.mod-right-split .nav-files-container {
+  padding-top: 0 !important;
+}
+
+/* CRITICAL — the user's suggestion: visually place the nav buttons in the
+ * .workspace-tab-header-spacer zone of the tab strip. Approach:
+ *   1. Make .workspace-tabs the positioned anchor.
+ *   2. Absolute-position .nav-header to top:0 right:100px of .workspace-tabs
+ *      (lands in the spacer area of the tab strip).
+ *   3. Aggressively defeat any overflow:hidden / contain that would clip the
+ *      floated header on its way up through Obsidian's container chain. */
+body div.workspace-split.mod-left-split div.workspace-tab-container,
+body div.workspace-split.mod-right-split div.workspace-tab-container,
+body div.workspace-split.mod-left-split div.workspace-tab-container > div.workspace-leaf,
+body div.workspace-split.mod-right-split div.workspace-tab-container > div.workspace-leaf,
+body div.workspace-split.mod-left-split div.workspace-tab-container div.workspace-leaf-content,
+body div.workspace-split.mod-right-split div.workspace-tab-container div.workspace-leaf-content,
+body div.workspace-split.mod-left-split div.workspace-tab-container div.workspace-leaf-content[data-type] {
+  overflow: visible !important;
+  contain: none !important;
+  clip-path: none !important;
+}
+
+/* The spacer in the tab strip — explicitly NOT a click target above the
+ * float zone, so clicks pass through to whatever's behind. */
+body div.workspace-split.mod-left-split div.workspace-tab-header-spacer,
+body div.workspace-split.mod-right-split div.workspace-tab-header-spacer {
+  position: relative !important;
+}
+
+/* Establish an explicit flex-column chain from .workspace-tab-container
+ * down to .nav-files-container so the file tree has a constrained slot to
+ * scroll within. Each intermediate level needs flex:1 + min-height:0 to
+ * pass height down without collapsing. */
+
+body div.workspace-split.mod-left-split div.workspace-tab-container,
+body div.workspace-split.mod-right-split div.workspace-tab-container {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  position: static !important; /* must NOT be positioned — .workspace-tabs is the anchor */
+}
+
+/* position:static applies to ALL leaves regardless of .mod-active —
+ * it doesn't fight display:none on inactive leaves (orthogonal properties),
+ * but it DOES guarantee .workspace-tabs is always the closest positioned
+ * ancestor for .nav-header, even on initial load or after collapse/reopen
+ * before .mod-active is reapplied. */
+body div.workspace-split.mod-left-split div.workspace-tab-container > div.workspace-leaf,
+body div.workspace-split.mod-right-split div.workspace-tab-container > div.workspace-leaf {
+  position: static !important;
+  transform: none !important;
+}
+
+/* Display:flex stays scoped to .mod-active so we don't break inactive
+ * leaves' display:none */
+body div.workspace-split.mod-left-split div.workspace-tab-container > div.workspace-leaf.mod-active,
+body div.workspace-split.mod-right-split div.workspace-tab-container > div.workspace-leaf.mod-active {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  width: 100% !important;
+}
+
+/* Ensure .workspace-tab-header-container doesn't trap our floated nav-header
+ * in its own stacking context, and sits flush at the top of the dock */
+body div.workspace-split.mod-left-split div.workspace-tab-header-container,
+body div.workspace-split.mod-right-split div.workspace-tab-header-container,
+body .workspace-tab-header-container {
+  position: static !important;
+  z-index: auto !important;
+  isolation: auto !important;
+  contain: none !important;
+  overflow: visible !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* position:static applies to ALL workspace-leaf-content regardless of state */
+body div.workspace-split.mod-left-split div.workspace-leaf-content,
+body div.workspace-split.mod-right-split div.workspace-leaf-content {
+  position: static !important;
+  transform: none !important;
+}
+
+/* Display:flex chain stays scoped to .mod-active */
+body div.workspace-split.mod-left-split div.workspace-leaf.mod-active div.workspace-leaf-content,
+body div.workspace-split.mod-right-split div.workspace-leaf.mod-active div.workspace-leaf-content {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+/* The file tree itself — fills remaining space, scrolls internally */
+body div.workspace-split.mod-left-split div.nav-files-container,
+body div.workspace-split.mod-right-split div.nav-files-container,
+body div.workspace-split.mod-left-split div.view-content,
+body div.workspace-split.mod-right-split div.view-content {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Collapse .nav-header's flow-space so file tree slides up to the tab-strip
+ * level (the header itself is absolutely positioned so it doesn't occupy
+ * row 2 anymore). */
+body .workspace-split.mod-left-split .nav-header,
+body .workspace-split.mod-right-split .nav-header,
+body .workspace-split.mod-left-split .view-header,
+body .workspace-split.mod-right-split .view-header {
+  /* Already absolute via earlier rule; this just guards margin/inline-flow */
+  margin: 0 !important;
+}
+
+/* ============================================================================
+ * 18. Sidebars (left/right docks) + translucent-window enhancements
+ * ============================================================================ */
+
+/* Side dock — gentle glass strip; lets vibrancy breathe through to wallpaper
+ * when Obsidian's "Translucent window" is enabled. */
+.workspace-split.mod-left-split,
+.workspace-split.mod-right-split,
+.mod-left-split .workspace-tabs,
+.mod-right-split .workspace-tabs {
+  background: var(--bb-glass-tint-soft) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-base)) saturate(var(--bb-glass-saturate));
+}
+
+/* When user enables Settings → Appearance → Translucent window:
+ * push vibrancy further; the editor canvas itself becomes a soft glass layer */
+body.is-translucent .workspace-split.mod-root .workspace-leaf-content {
+  background: hsla(40, 30%, 99%, 0.40);
+  backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-soft)) saturate(var(--bb-glass-saturate));
+}
+
+body.theme-dark.is-translucent .workspace-split.mod-root .workspace-leaf-content {
+  background: hsla(220, 14%, 12%, 0.55);
+}
+
+body.is-translucent .workspace-ribbon,
+body.is-translucent .status-bar,
+body.is-translucent .mod-left-split .workspace-tabs,
+body.is-translucent .mod-right-split .workspace-tabs {
+  background: hsla(40, 30%, 99%, 0.30) !important;
+}
+
+body.theme-dark.is-translucent .workspace-ribbon,
+body.theme-dark.is-translucent .status-bar,
+body.theme-dark.is-translucent .mod-left-split .workspace-tabs,
+body.theme-dark.is-translucent .mod-right-split .workspace-tabs {
+  background: hsla(220, 14%, 10%, 0.45) !important;
+}
+
+/* ============================================================================
+ * 18b. Syntax highlighting — Prism (rendered) + CodeMirror (source mode)
+ * ============================================================================ */
+
+/* Prism (markdown rendered code blocks) */
+.markdown-rendered .token.comment,
+.markdown-rendered .token.prolog,
+.markdown-rendered .token.doctype,
+.markdown-rendered .token.cdata { color: var(--bb-syntax-comment); font-style: italic; }
+
+.markdown-rendered .token.keyword,
+.markdown-rendered .token.builtin,
+.markdown-rendered .token.important,
+.markdown-rendered .token.atrule { color: var(--bb-syntax-keyword); }
+
+.markdown-rendered .token.string,
+.markdown-rendered .token.regex,
+.markdown-rendered .token.char,
+.markdown-rendered .token.attr-value { color: var(--bb-syntax-string); }
+
+.markdown-rendered .token.number,
+.markdown-rendered .token.boolean,
+.markdown-rendered .token.symbol,
+.markdown-rendered .token.constant { color: var(--bb-syntax-number); }
+
+.markdown-rendered .token.function,
+.markdown-rendered .token.method { color: var(--bb-syntax-function); }
+
+.markdown-rendered .token.class-name,
+.markdown-rendered .token.namespace,
+.markdown-rendered .token.entity { color: var(--bb-syntax-class); }
+
+.markdown-rendered .token.tag,
+.markdown-rendered .token.deleted { color: var(--bb-syntax-tag); }
+
+.markdown-rendered .token.attr-name { color: var(--bb-syntax-attr); }
+
+.markdown-rendered .token.property,
+.markdown-rendered .token.url,
+.markdown-rendered .token.inserted { color: var(--bb-syntax-property); }
+
+.markdown-rendered .token.selector,
+.markdown-rendered .token.parameter { color: var(--bb-syntax-selector); }
+
+.markdown-rendered .token.punctuation,
+.markdown-rendered .token.operator,
+.markdown-rendered .token.variable { color: var(--bb-syntax-punctuation); }
+
+/* CodeMirror (source mode editor) */
+.cm-s-obsidian .cm-comment,
+.cm-line .cm-comment { color: var(--bb-syntax-comment) !important; font-style: italic; }
+
+.cm-s-obsidian .cm-keyword,
+.cm-line .cm-keyword,
+.cm-s-obsidian .cm-builtin,
+.cm-line .cm-builtin { color: var(--bb-syntax-keyword) !important; }
+
+.cm-s-obsidian .cm-string,
+.cm-line .cm-string,
+.cm-s-obsidian .cm-string-2,
+.cm-line .cm-string-2 { color: var(--bb-syntax-string) !important; }
+
+.cm-s-obsidian .cm-number,
+.cm-line .cm-number,
+.cm-s-obsidian .cm-atom,
+.cm-line .cm-atom { color: var(--bb-syntax-number) !important; }
+
+.cm-s-obsidian .cm-def,
+.cm-line .cm-def,
+.cm-s-obsidian .cm-property,
+.cm-line .cm-property { color: var(--bb-syntax-function) !important; }
+
+.cm-s-obsidian .cm-type,
+.cm-line .cm-type,
+.cm-s-obsidian .cm-tag,
+.cm-line .cm-tag { color: var(--bb-syntax-tag) !important; }
+
+.cm-s-obsidian .cm-attribute,
+.cm-line .cm-attribute { color: var(--bb-syntax-attr) !important; }
+
+.cm-s-obsidian .cm-variable,
+.cm-line .cm-variable,
+.cm-s-obsidian .cm-variable-2,
+.cm-line .cm-variable-2 { color: var(--text-normal) !important; }
+
+.cm-s-obsidian .cm-operator,
+.cm-line .cm-operator,
+.cm-s-obsidian .cm-punctuation,
+.cm-line .cm-punctuation { color: var(--bb-syntax-punctuation) !important; }
+
+.cm-s-obsidian .cm-meta,
+.cm-line .cm-meta { color: var(--bb-syntax-class) !important; }
+
+/* CodeMirror selection — make sure editor selection matches the rest */
+.cm-content ::selection,
+.cm-line ::selection,
+.cm-editor .cm-selectionBackground,
+.cm-editor.cm-focused .cm-selectionBackground {
+  background: var(--text-selection) !important;
+}
+
+/* ============================================================================
+ * 18c. Hover popovers — wikilink preview, link preview, tag preview
+ *      Match the modal/suggestion glass family.
+ * ============================================================================ */
+
+.popover,
+.hover-popover,
+.markdown-embed.is-loaded > .popover {
+  background: var(--bb-glass-tint-strong) !important;
+  backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--bb-glass-blur-strong)) saturate(var(--bb-glass-saturate));
+  border: none !important;
+  border-radius: var(--bb-radius-l) !important;
+  box-shadow:
+    inset 0 1px 0 var(--bb-glass-highlight),
+    inset 0 0 0 1px var(--bb-glass-edge),
+    var(--bb-glass-shadow-lift) !important;
+  padding: 14px 16px;
+  overflow: hidden;
+}
+
+/* ============================================================================
+ * 18d. Drag-and-drop target indicator (file explorer reorder, link drop)
+ * ============================================================================ */
+
+.tree-item-self.is-being-dragged-over,
+.nav-folder.is-being-dragged-over > .nav-folder-title,
+.drop-target,
+.is-drag-over {
+  background: var(--bb-accent-fill-soft) !important;
+  box-shadow: inset 0 0 0 2px var(--bb-accent-base) !important;
+  border-radius: var(--bb-radius-s);
+}
+
+/* Drop indicator line (e.g., between sortable items) */
+.drop-indicator,
+.workspace-tab-header-container .drop-indicator-line {
+  background: var(--bb-accent-base) !important;
+  height: 2px !important;
+  border-radius: 1px;
+}
+
+/* ============================================================================
+ * 18e. Empty states + long-text truncation
+ * ============================================================================ */
+
+.empty-state,
+.pane-empty,
+.search-empty-state {
+  color: var(--text-faint);
+  font-style: italic;
+  text-align: center;
+  padding: 24px 16px;
+  font-size: 0.9em;
+}
+
+/* Truncate long file names, tab titles, and frontmatter values with ellipsis
+ * instead of wrapping or overflowing the panel. */
+.tree-item-inner,
+.nav-file-title-content,
+.nav-folder-title-content,
+.workspace-tab-header-inner-title,
+.metadata-property-value > div,
+.metadata-property-key {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Search match highlighting — soft amber wash that respects the brand */
+.search-result-file-matched-text,
+.suggestion-highlight,
+mark {
+  background: var(--text-highlight-bg) !important;
+  color: var(--text-normal) !important;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* ============================================================================
+ * 19. Print
+ * ============================================================================ */
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .markdown-rendered code,
+  .markdown-rendered pre {
+    background: #f5f5f5 !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+/* ============================================================================
+ * 20. Reduced motion + reduced transparency — respect OS preferences
+ * ============================================================================ */
+
+/* macOS / Windows "Reduce transparency" — fall back to solid panels.
+ * We can't directly read the OS setting in CSS, but we can listen for the
+ * media query that Chromium exposes. */
+@media (prefers-reduced-transparency: reduce) {
+  .workspace-ribbon,
+  .workspace-tab-header.is-active,
+  .search-input-container,
+  .graph-controls,
+  .graph-control-section,
+  .modal,
+  .modal-bg,
+  .suggestion-container,
+  .tooltip,
+  .status-bar,
+  .metadata-container,
+  .markdown-rendered pre,
+  .markdown-rendered th,
+  .markdown-rendered .internal-embed,
+  .markdown-rendered .markdown-embed,
+  .notice,
+  .callout,
+  button:not(.mod-cta) {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .modal,
+  .suggestion-container,
+  .tooltip {
+    background: var(--background-primary) !important;
+  }
+  .workspace-ribbon,
+  .status-bar,
+  .graph-controls,
+  .graph-control-section {
+    background: var(--background-secondary) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
