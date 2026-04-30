@@ -5,7 +5,7 @@
 > Translucent panels over your wallpaper. Forest green on hue 146°. WCAG AA in both modes.<br>
 > Retheme everything by changing one CSS variable.
 
-![Version](https://img.shields.io/badge/version-1.1.0-2ea968)
+![Version](https://img.shields.io/badge/version-1.1.1-2ea968)
 ![Status](https://img.shields.io/badge/status-stable-2ea968)
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.4%2B-7c3aed)
 ![License](https://img.shields.io/badge/license-MIT-blue)
@@ -171,7 +171,9 @@ Code blocks use a forest-friendly palette. Each role is a single variable, scope
 
 ### Swap the typeface
 
-The theme `@import`s [Inter](https://rsms.me/inter/) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) from CDN. To use system fonts instead:
+By default the theme prefers [Inter](https://rsms.me/inter/) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) when installed locally, and falls back to platform-native fonts (SF Pro / SF Mono on macOS, Segoe UI / Cascadia on Windows, system-ui / DejaVu Sans Mono on Linux). The theme makes no external network requests — install Inter or JetBrains Mono on your system if you want them used.
+
+To force a different stack:
 
 ```css
 body {

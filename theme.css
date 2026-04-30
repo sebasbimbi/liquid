@@ -1,11 +1,11 @@
-@import url('https://rsms.me/inter/inter.css');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 /* ============================================================================
  *  Liquid — a Liquid Glass theme for Obsidian
- *  v1.0.0 — 2026-04-29 (PUBLIC RELEASE — 37 internal polish iterations on a
- *  single personal vault, refactored to standalone theme. macOS Tahoe Liquid
- *  Glass aesthetic across all chrome. See README.md / DESIGN.md / PRODUCT.md.)
+ *  v1.1.1 — 2026-04-29
+ *
+ *  No external network requests. The theme uses local-or-system fonts only
+ *  (Inter / JetBrains Mono first in the stack if installed, SF / Segoe UI /
+ *  Cascadia as system fallbacks). Drop the matching font snippet from the
+ *  README "Swap the typeface" section if you want to override.
  *
  *  ────────────────────────────────────────────────────────────────────────
  *  Internal iteration log (kept for reference, not a public changelog):
@@ -41,7 +41,10 @@
  *            (7) ellipsis truncation policy on tree items / tab titles /
  *                frontmatter values;
  *            (8) CodeMirror selection forced to --text-selection;
- *            (9) Inter + JetBrains Mono @import for guaranteed typography.)
+ *            (9) Inter + JetBrains Mono first in --font-text / --font-monospace
+ *                stacks; system fallbacks for users without those fonts
+ *                installed locally. No external @import — Obsidian theme
+ *                guidelines forbid external network requests.)
  *
  *  For full effect, enable: Settings → Appearance → Translucent window.
  *  Without translucent window, glass renders as semi-opaque floating cards
